@@ -1,6 +1,9 @@
 # NESTJS
 
 
+NestJs is a Opinionated (Strict modular structure (Controllers, Services, Modules)) web framework build on the top of express ( not just this tho, we can use other node HTTP frameworks as well like fastify).
+
+
 ## Philosophy
 
 Organize your application into modules, keep HTTP handling in *controllers*, put business logic in *providers/services*, and let *dependency injection* connect everything together.
@@ -47,6 +50,7 @@ well it's depend on alot of factors such as team expertise, nature of the task a
 
 there is no definate answer but we can always decide based on the situation.
 
+but in a high level view Nestjs have Built-in abstractions for validation, microservices, WebSockets, GraphQL, and OpenAPI/Swagger.
 
 
 ### Controllers, providers and modules
@@ -291,3 +295,78 @@ export class AppModule {}
 
 
 
+
+
+## Project
+
+Nest aims to be a platform-agnostic framework. -> tries to be independent of framework and web server.
+
+
+### controllers
+
+*routeConflictPolicy* : show options manage router conflict ( off, warn, error) for duplicate and shadow ( user/:id , uses/me) paths.
+
+use @HttpCode(status_code) to change default status code and for non-static status code use Response object
+
+
+### Providers 
+
+property-based-injection : we can use this if the top class depends on more than one providers, then passing all of them using super() can become cumbersome. 
+
+
+
+``` text
+Warning
+If your class doesn't extend another class, it's generally better to use constructor-based injection. The constructor clearly specifies which dependencies are required, offering better visibility and making the code easier to understand compared to class properties annotated with @Inject.`
+
+```
+
+
+### Modules
+
+For most applications, you'll likely have multiple modules, each encapsulating a closely related set of capabilities.
+
+
+For most applications, you'll likely have multiple modules, each encapsulating a closely related set of capabilities.
+
+
+Every module is automatically a shared module
+
+use export to shared a module's provider with other modules. 
+
+This is one of the key benefits of modularity and dependency injection in frameworks like NestJS—allowing services to be efficiently shared throughout the application.
+
+
+When you want to provide a set of providers which should be available everywhere out-of-the-box (e.g., helpers, database connections, etc.), make the module global with the @Global() decorator.
+
+``` text
+If we were to directly register the CatsService in every module that requires it, it would indeed work, but it would result in each module getting its *own separate instance* of the CatsService.
+
+This can lead to increased memory usage since multiple instances of the same service are created, and it could also cause unexpected behavior, such as state inconsistency if the service maintains any internal state.
+```
+
+
+### Terminology
+
+DTO : data transfer object : a class that defines the shape of the data moving into or out of the application. ( it seems like dataclass class in django)
+
+
+Entity : like Django Models
+
+### Commands 
+
+``` bash
+# to create project
+nest new project-name 
+
+# to create controller 
+nest g controller [name]
+
+# to create service 
+nest g service [name]
+
+
+# to create module
+nest g module [name]
+
+```
