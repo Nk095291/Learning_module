@@ -1,26 +1,44 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
+import { Database } from '../database/database.service.js';
 
 @Injectable()
 export class UsersService {
+  constructor(private db : Database) {}
+
   create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+    const user = { id : this.db.nextUserId(), ...createUserDto};
+    this.db.users.push(user);
+    return user;
   }
 
   findAll() {
-    return `This action returns all users`;
+    return this.db.users;
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} user`;
+    const user = this.db.users.find((u) => u.id === id);
+
+    if (!user) 
+      throw new NotFoundException(`User ${id} not found`);
+
+    return user;
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+    const user = this.findOne(id);
+    if (!user) 
+      throw new NotFoundException(`User ${id} not found`);
+    Object.assign(user, updateUserDto);
+    return user;
   }
 
   remove(id: number) {
-    return `This action removes a #${id} user`;
+    const index = this.db.users.findIndex((u) => u.id === id);
+    if (index === -1) 
+      throw new NotFoundException(`User ${id} not found`);
+    this.db.users.splice(index, 1);
+    return { message: `User ${id} deleted successfully` };
   }
 }
