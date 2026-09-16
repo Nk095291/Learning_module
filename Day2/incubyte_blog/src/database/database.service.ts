@@ -17,7 +17,7 @@ export class Database {
     return this.userId++;
   }
 
-  nextPostId() {
+  nextBlogId() {
     return this.blogId++;
   }
 }
