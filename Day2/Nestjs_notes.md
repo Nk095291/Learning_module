@@ -1,14 +1,12 @@
 # NESTJS
 
-
 NestJs is a Opinionated (Strict modular structure (Controllers, Services, Modules)) web framework build on the top of express ( not just this tho, we can use other node HTTP frameworks as well like fastify).
-
 
 ## Philosophy
 
 Organize your application into modules, keep HTTP handling in *controllers*, put business logic in *providers/services*, and let *dependency injection* connect everything together.
 
-``` typescript
+```typescript
 // NestJS forces structure:
 src/
   users/
@@ -20,13 +18,14 @@ src/
 @Controller()      // "This is a controller"
 @Module()          // "This is a module"
 ```
-### how nest is different from django ? 
+
+### how nest is different from django ?
 
 It strongly encourage dependency injection! 
 
 Django doesn't have built-in DI—you either wire it manually, use a package like dependency-injector, or rely on singletons/globals
 
-``` typescript
+```typescript
 # Django is loose:
 myapp/
   views.py   (could be controllers OR business logic)
@@ -35,16 +34,16 @@ myapp/
 ```
 
 
-| Layer / Aspect | Django | NestJS |
-| :--- | :--- | :--- |
-| **HTTP** | View / ViewSet | Controller |
-| **Business** | Service* | Provider / Service |
-| **Data** | Django ORM | Repository / ORM |
-| **Wiring** | Mostly manual | DI Container |
-| **Organization** | Django App | Module |
+| Layer / Aspect   | Django         | NestJS             |
+| ---------------- | -------------- | ------------------ |
+| **HTTP**         | View / ViewSet | Controller         |
+| **Business**     | Service*       | Provider / Service |
+| **Data**         | Django ORM     | Repository / ORM   |
+| **Wiring**       | Mostly manual  | DI Container       |
+| **Organization** | Django App     | Module             |
 
 
-### when to use NestJs instead of Django ? 
+### when to use NestJs instead of Django ?
 
 well it's depend on alot of factors such as team expertise, nature of the task and the existing ecosystem fit. 
 
@@ -52,9 +51,7 @@ there is no definate answer but we can always decide based on the situation.
 
 but in a high level view Nestjs have Built-in abstractions for validation, microservices, WebSockets, GraphQL, and OpenAPI/Swagger.
 
-
 ### Controllers, providers and modules
-
 
 #### controllers
 
@@ -67,23 +64,20 @@ Extract data from requests (params, body, headers)
 Call services
 Return responses
 
-
 #### providers
-
 
 similar to services and utils class in django 
 
 Provider = a class marked with @Injectable() that can be injected into other classes. Services are providers, but so are other utilities (database connections, caches, etc.).
 
-
-#### Modules 
+#### Modules
 
 A module is a container that groups related things together and tells the framework how to wire them.
 
 then you can export the module to use it at either root module ( like we add app in INSTALL_APP in django) or at some other modules. 
 
-
 example : 
+
 ```typescript
 // users.module.ts
 import { Module } from '@nestjs/common';
@@ -115,12 +109,11 @@ export class AppModule {}
 
 what ? : Instead of a class creating its own dependencies, they're injected into it from the outside.
 
-
 ##### How does it handle DI ?
 
 // This is what happens BEHIND THE SCENES (you don't write this)
 
-``` typescript
+```typescript
 // 1. It sees Database is a provider
 const database = new Database();
 console.log('Connected to database');
@@ -136,7 +129,7 @@ const userController = new UserController(userService);  // Inject it!
 
 ##### How NestJS Resolves Dependencies
 
-``` typescript
+```typescript
 1. Constructor Parameter → @Param('id') id: string
                           constructor(private db: Database) { }
 
@@ -151,12 +144,13 @@ const userController = new UserController(userService);  // Inject it!
 6. Injects it → new UserService(database)
 ```
 
-#### Why This Matters ? 
+#### Why This Matters ?
 
-##### Testing, DI make the mocking of dependencies easier. 
+##### Testing, DI make the mocking of dependencies easier.
 
 ###### Fragile Mocking
-``` python
+
+```python
 
 # Python mocking (path-dependent, fragile)
 from unittest.mock import patch
@@ -173,7 +167,7 @@ def test_user_service():
 # - You're patching globally (affects other tests if not careful)
 ```
 
-``` typescript
+```typescript
 
 // NestJS mocking (explicit, safe)
 const module = await Test.createTestingModule({
@@ -195,7 +189,7 @@ const module = await Test.createTestingModule({
 
 ###### Testing Real vs Mock is Hard
 
-``` python
+```python
 # Python - you have to decide BEFORE creating the service
 def test_with_mock():
     with patch('myapp.Database') as mock_db:
@@ -208,7 +202,7 @@ def test_with_real():
     # Does this use real or mock DB? Unclear!
 ```
 
-``` typescript
+```typescript
 // NestJS - you CHOOSE what to inject
 describe('UserService', () => {
   let service: UserService;
@@ -229,19 +223,19 @@ describe('UserService', () => {
 // Crystal clear what each test uses
 ```
 
-
 ##### Hidden Dependencies
+
 to understand what a service will need you will have to check the code
 
-##### Multiple Implementations 
+##### Multiple Implementations
 
 you want to support both PostgreSQL and MongoDB. you will have to update the userService to add that but with ID you can do that without changing the code.
 
-##### Large Codebases Get Messy : 
+##### Large Codebases Get Messy :
 
 In a medium-to-large codebase, tracking dependencies gets hard
 
-``` python 
+```python
 
 # Where does this Database come from?
 class UserService:
@@ -261,7 +255,7 @@ class PaymentService:
 
 ```
 
-``` typescript
+```typescript
 
 // With DI, it's centralized
 @Module({
@@ -280,27 +274,24 @@ export class AppModule {}
 // Change DB config ONE place. All services get the update automatically.
 
 ```
-##### Summary: 
 
-| Aspect | Without DI | With DI |
-| :--- | :--- | :--- |
-| **See dependencies** | Hidden in code | Explicit in constructor |
-| **Mock safely** | Fragile string-based patching | Pass objects directly |
-| **Swap implementations** | Hardcoded or messy conditionals | Change one place |
-| **Compiler help** | None (Python) | TypeScript catches errors |
-| **Refactoring safety** | Renaming breaks string paths | Tools safely rename everywhere |
-| **Large codebases** | Nightmare to track | Clear and organized |
-| **Architecture** | Easy to ignore SOLID | Forced to follow best practices |
+##### Summary:
 
 
-
-
+| Aspect                   | Without DI                      | With DI                         |
+| ------------------------ | ------------------------------- | ------------------------------- |
+| **See dependencies**     | Hidden in code                  | Explicit in constructor         |
+| **Mock safely**          | Fragile string-based patching   | Pass objects directly           |
+| **Swap implementations** | Hardcoded or messy conditionals | Change one place                |
+| **Compiler help**        | None (Python)                   | TypeScript catches errors       |
+| **Refactoring safety**   | Renaming breaks string paths    | Tools safely rename everywhere  |
+| **Large codebases**      | Nightmare to track              | Clear and organized             |
+| **Architecture**         | Easy to ignore SOLID            | Forced to follow best practices |
 
 
 ## Project
 
 Nest aims to be a platform-agnostic framework. -> tries to be independent of framework and web server.
-
 
 ### controllers
 
@@ -308,27 +299,21 @@ Nest aims to be a platform-agnostic framework. -> tries to be independent of fra
 
 use @HttpCode(status_code) to change default status code and for non-static status code use Response object
 
-
-### Providers 
+### Providers
 
 property-based-injection : we can use this if the top class depends on more than one providers, then passing all of them using super() can become cumbersome. 
 
-
-
-``` text
+```text
 Warning
 If your class doesn't extend another class, it's generally better to use constructor-based injection. The constructor clearly specifies which dependencies are required, offering better visibility and making the code easier to understand compared to class properties annotated with @Inject.`
 
 ```
 
-
 ### Modules
 
 For most applications, you'll likely have multiple modules, each encapsulating a closely related set of capabilities.
 
-
 For most applications, you'll likely have multiple modules, each encapsulating a closely related set of capabilities.
-
 
 Every module is automatically a shared module
 
@@ -336,37 +321,44 @@ use export to shared a module's provider with other modules.
 
 This is one of the key benefits of modularity and dependency injection in frameworks like NestJS—allowing services to be efficiently shared throughout the application.
 
-
 When you want to provide a set of providers which should be available everywhere out-of-the-box (e.g., helpers, database connections, etc.), make the module global with the @Global() decorator.
 
-``` text
+```text
 If we were to directly register the CatsService in every module that requires it, it would indeed work, but it would result in each module getting its *own separate instance* of the CatsService.
 
 This can lead to increased memory usage since multiple instances of the same service are created, and it could also cause unexpected behavior, such as state inconsistency if the service maintains any internal state.
 ```
 
-
 ### Terminology
 
 DTO : data transfer object : a class that defines the shape of the data moving into or out of the application. ( it seems like dataclass class in django)
 
-
 Entity : like Django Models
 
-### Commands 
+### Commands
 
-``` bash
+```bash
 # to create project
 nest new project-name 
 
+# to create full CRUD endpionts
+nest g resource [name]
 # to create controller 
 nest g controller [name]
 
 # to create service 
 nest g service [name]
 
-
 # to create module
 nest g module [name]
 
+```
+
+
+
+##### OTHER: 
+
+``` bash
+# 1. Remove the nested repo (this is what actually unblocks git add)
+Remove-Item -Recurse -Force .\sample_project\.git
 ```
