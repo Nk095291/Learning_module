@@ -120,3 +120,8 @@ import UserService from "./user";
 ```
 
 Classes and other concepts are mostly similar to other languages.
+
+
+## NOTES : 
+
+- The official doc was helpful, but I found some parts a little confusing because some examples and explanations are based on older TCS compiler configurations. For example, the default target and the older decorator structure can be confusing when you're learning the current TypeScript setup. It would be better to mention which version should we read about and have a details list of topics to read about.
