@@ -8,8 +8,6 @@ Use the **“observation - impact - recommendations - discussion”** model.
 
 **Observe** what went wrong. **State** its impact. Give **recommendations** or propose solutions, and finally **discuss** those solutions or ask for improvement.
 
-This chat explained the Radical Candor framework in more detail with multiple situational examples:
-https://chatgpt.com/share/6aa904c9-855c-83e8-b568-7b8f389470e5
 
 ## Community Engagement
 
@@ -31,6 +29,14 @@ Be proactive in providing solutions and communication. These show that we care a
 
 Caring builds trust. Trust makes us more reliable than others.
 
+Don't just take requirements. Understand the business problem behind them and proactively suggest better solutions.
+
 ## Development
 
 Be proactive here as well. Be observant of the current issues, even if they are minor. Just keep a note of them and the problems that they may cause in the future instead of waiting for the problem to happen and then reacting.
+
+
+## Referrence : 
+
+- This chat explained the Radical Candor framework in more detail with multiple situational examples:
+https://chatgpt.com/share/6aa904c9-855c-83e8-b568-7b8f389470e5
