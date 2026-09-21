@@ -8,9 +8,10 @@ import { MousesModule } from './mouses/mouses.module.js';
 import { DogsService } from './dogs/dogs.service.js';
 import { DogsModule } from './dogs/dogs.module.js';
 import { CatsModule } from './cats/cats.module.js';
+import { FrogsModule } from './frogs/frogs.module.js';
 
 @Module({
-  imports: [MousesModule, DogsModule, CatsModule],
+  imports: [MousesModule, DogsModule, CatsModule, FrogsModule],
   controllers: [AppController, DogsController],
   providers: [AppService, DogsService],
 })
