@@ -1,0 +1,106 @@
+Movie Ticket Booking : 
+
+
+
+Rules : Reserve Seats , enforce age rating.
+
+
+
+Entities: 
+
+M// User
+{
+  id: UUID
+  email: string
+  dob: Date                    // Age check happens here
+  created_at: Date
+}
+
+// Movie
+{
+  id: UUID
+  title: string
+  ageRating: number           // 0, 12, 15, 18, etc.
+  created_at: Date
+}
+
+// Theater
+{
+  id: UUID
+  name: string
+  locality: string
+  city: string
+  state: string
+}
+
+// Seat (physical seat in a theater)
+{
+  id: UUID
+  theater_id: FK
+  seatNumber: string          // e.g., "A1", "B5"
+  row: string                 // e.g., "A", "B"
+  col: number                 // e.g., 1, 2, 3
+}
+
+// MovieShowing (screening - movie at specific time/place)
+{
+  id: UUID
+  movie_id: FK
+  theater_id: FK
+  startTime: Date
+  endTime: Date
+  showDate: Date
+  created_at: Date
+}
+
+// Booking (aggregate root)
+{
+  id: UUID
+  user_id: FK
+  movie_showing_id: FK        // Which showing is this booking for
+  created_at: Date
+}
+
+// SeatGroup (groups seats together in one booking)
+{
+  id: UUID
+  booking_id: FK              // Which booking owns these seats
+}
+
+// BookedSeat (individual seat within a booking)
+{
+  id: UUID
+  seat_id: FK
+  seat_group_id: FK           // FK to SeatGroup (NO mapping table!)
+  status: enum (RESERVED | CANCELLED)
+  created_at: Date
+}
+
+
+
+I'm thinking of dividing it into these modules : 
+
+Database : dummy database same as in /Day2/incubyte_blog/src/database/
+
+global export : DatabaseService
+
+UesrModule : 
+
+export : UserService 
+
+TheaterModule : 
+
+TheaterSerivce 
+SeatSerivce 
+
+
+
+MovieModule : 
+MovieService
+MovieShowService
+
+BookingModule : 
+bookingService
+Booked_seatService
+SeatGroup_booked_seat_mapping
+SeatGroupService

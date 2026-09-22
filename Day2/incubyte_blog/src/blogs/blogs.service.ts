@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateBlogDto } from './dto/create-blog.dto.js';
 import { UpdateBlogDto } from './dto/update-blog.dto.js';
 import { UsersService } from '../users/users.service.js';
 import { Database } from '../database/database.service.js';
+import { createUserRole } from '../users/roles/create-user-role.js';
 
 @Injectable()
 export class BlogsService {
@@ -50,7 +51,15 @@ export class BlogsService {
     return blog;
   }
 
-  remove(id: number) {
+  remove(id: number, actorId: number) {
+    const blog = this.findOne(id);
+    const actor = this.usersService.findOne(actorId);
+    const role = createUserRole(actor);
+
+    if (!role.canDeletePost(blog)) {
+      throw new ForbiddenException(`User ${actorId} cannot delete blog ${id}`);
+    }
+
     const index = this.db.blogs.findIndex((b) => b.id === id);
     if(index === -1) throw new NotFoundException(`Blog ${id} not found`);
     this.db.blogs.splice(index, 1);

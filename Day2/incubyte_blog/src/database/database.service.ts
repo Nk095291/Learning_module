@@ -6,11 +6,13 @@ import { Blog } from '../blogs/entities/blog.entity.js';
 @Injectable()
 export class Database {
   users: User[] = [
-    { id: 1, name: 'John', email: 'john@example.com' },
+    { id: 1, name: 'John', email: 'john@example.com', role: 'free' },
+    { id: 2, name: 'Jane', email: 'jane@example.com', role: 'premium' },
+    { id: 3, name: 'Ada', email: 'ada@example.com', role: 'admin' },
   ];
   blogs: Blog[] = [];
 
-  private userId = 2;
+  private userId = 4;
   private blogId = 1;
 
   nextUserId() {
