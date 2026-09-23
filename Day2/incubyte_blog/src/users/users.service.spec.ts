@@ -235,6 +235,23 @@ describe('UsersService', () => {
       });
       expect(service.findOne(actor.id)).toEqual(updated);
     });
+    
+    it('should throw error if actor tries to update its own role', () => {
+      // given
+      const actor = service.findOne(1);
+
+      // when
+      const updateUser = () => service.update(
+        actor.id,
+        { name: 'Johnny', email: 'johnny@example.com' , role : 'admin'},
+        actor.id,
+      );
+
+      // then
+      expect(updateUser).toThrow(BadRequestException);
+      expect(updateUser).toThrow('Cannot update role of the user');
+      expect(service.findOne(actor.id).role).toBe('free');
+    });
 
     it('should throw error if actor tries to update user role to invalid role', () => {
       // given
@@ -248,6 +265,7 @@ describe('UsersService', () => {
 
       // then
       expect(updateUser).toThrow(BadRequestException);
+      expect(updateUser).toThrow('Invalid role');
       expect(service.findOne(user.id).role).toBe('free');
     });
   });
