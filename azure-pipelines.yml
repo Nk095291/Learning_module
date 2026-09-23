@@ -1,8 +1,16 @@
 trigger:
-- main
+  branches:
+    include:
+    - main
+  paths:
+    include:
+    - Day2/incubyte_blog/*
 
 pool:
   vmImage: ubuntu-latest
+
+variables:
+  projectDir: 'Day2/incubyte_blog'
 
 steps:
 - task: NodeTool@0
@@ -12,6 +20,8 @@ steps:
 
 - script: npm ci
   displayName: 'Install dependencies'
+  workingDirectory: $(projectDir)
 
 - script: npm test -- --ci
   displayName: 'Run unit tests'
+  workingDirectory: $(projectDir)
