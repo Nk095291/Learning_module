@@ -19,19 +19,19 @@ export class BlogsService {
     if(!author) throw new NotFoundException(`Author ${createBlogDto.authorId} not found`);
 
     const blog = { id : this.db.nextBlogId(), ...createBlogDto, author};
-    this.db.blogs.push(blog);
+    this.db.blogs[blog.id] = blog;
     return blog;
   }
 
   findAll() {
-    return this.db.blogs.map((blog) => ({
+    return Object.values(this.db.blogs).map((blog) => ({
       ...blog,
       author : this.usersService.findOne(blog.authorId),
     }));
   }
 
   findOne(id: number) {
-    const blog = this.db.blogs.find((b) => b.id === id);
+    const blog = this.db.blogs[id];
     if(!blog) throw new NotFoundException(`Blog ${id} not found`);
     return {
       ...blog,
@@ -41,13 +41,13 @@ export class BlogsService {
 
   update(id: number, updateBlogDto: UpdateBlogDto) {
     const blog = this.findOne(id);
-    if(!blog) throw new NotFoundException(`Blog ${id} not found`);
   
     if (updateBlogDto.authorId) {
       const author = this.usersService.findOne(updateBlogDto.authorId);
       if(!author) throw new NotFoundException(`Author ${updateBlogDto.authorId} not found`);
     }
     Object.assign(blog, updateBlogDto);
+    this.db.blogs[id] = blog;
     return blog;
   }
 
@@ -60,9 +60,7 @@ export class BlogsService {
       throw new ForbiddenException(`User ${actorId} cannot delete blog ${id}`);
     }
 
-    const index = this.db.blogs.findIndex((b) => b.id === id);
-    if(index === -1) throw new NotFoundException(`Blog ${id} not found`);
-    this.db.blogs.splice(index, 1);
-    return { message: `Blog ${id} deleted successfully` };
+    delete this.db.blogs[id];
+    return { message: `Blog ${blog.title} (${id}) deleted successfully` };
   }
 }

@@ -5,12 +5,12 @@ import { Blog } from '../blogs/entities/blog.entity.js';
 
 @Injectable()
 export class Database {
-  users: User[] = [
-    { id: 1, name: 'John', email: 'john@example.com', role: 'free' },
-    { id: 2, name: 'Jane', email: 'jane@example.com', role: 'premium' },
-    { id: 3, name: 'Ada', email: 'ada@example.com', role: 'admin' },
-  ];
-  blogs: Blog[] = [];
+  users: Record<number, User> = {
+    1: { id: 1, name: 'John', email: 'john@example.com', role: 'free' },
+    2: { id: 2, name: 'Jane', email: 'jane@example.com', role: 'premium' },
+    3: { id: 3, name: 'Ada', email: 'ada@example.com', role: 'admin' },
+  };
+  blogs: Record<number, Blog> = {};
 
   private userId = 4;
   private blogId = 1;
