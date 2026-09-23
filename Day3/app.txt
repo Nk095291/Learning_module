@@ -1,7 +1,5 @@
 Movie Ticket Booking : 
 
-
-
 Rules : Reserve Seats , enforce age rating.
 
 
