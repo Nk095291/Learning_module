@@ -27,7 +27,7 @@ NOTE : if the class grow too large and have many dependency it's better to divid
 
 Problem: `BlogsService.remove` used to delete any blog by id. Putting role rules there as `if (user.role === 'admin') ... else if ...` would dump every user type into the blogs service. Each new role would grow that method.
 
-Abstraction: a `UserRole` interface with one question, `canDeletePost(blog)`. Admin / premium / free each implement it. `createUserRole(user)` is the only switch. `BlogsService` loads the actor, wraps them, and asks the interface — it does not know admin vs free rules.
+Abstraction: a `UserRole` interface with one question, `canDeleteBlog(blog)`. Admin / premium / free each implement it. `createUserRole(user)` is the only switch. `BlogsService` loads the actor, wraps them, and asks the interface — it does not know admin vs free rules.
 
 - Admin can delete any blog
 - Free and premium can delete only their own (`actor.id === blog.authorId`)

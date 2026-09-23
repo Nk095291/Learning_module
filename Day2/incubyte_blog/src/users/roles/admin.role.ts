@@ -5,7 +5,16 @@ import { UserRole } from './user-role.interface.js';
 export class Admin implements UserRole {
   constructor(private readonly user: User) {}
 
-  canDeletePost(_blog: Blog): boolean {
+  canDeleteBlog(_blog: Blog): boolean {
+    return true;
+  }
+  canUpdate(user: User): boolean {
+    return true;
+  }
+  canUpdateRole(): boolean {
+    return true;
+  }
+  canDelete(user: User): boolean {
     return true;
   }
 }

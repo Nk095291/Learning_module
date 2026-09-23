@@ -4,7 +4,7 @@ import { FreeUser } from './free-user.role.js';
 import { PremiumUser } from './premium-user.role.js';
 import { UserRole } from './user-role.interface.js';
 
-export function createUserRole(user: User): UserRole {
+export function getUserRole(user: User): UserRole {
   switch (user.role) {
     case 'admin':
       return new Admin(user);

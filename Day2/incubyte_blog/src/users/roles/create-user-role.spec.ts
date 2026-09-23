@@ -32,8 +32,8 @@ describe('role delete permissions', () => {
   it('should let an admin delete any blog', () => {
     const role = createUserRole(userFactory.build({ id: 3, role: 'admin' }));
 
-    expect(role.canDeletePost(ownBlog)).toBe(true);
-    expect(role.canDeletePost(otherBlog)).toBe(true);
+    expect(role.canDeleteBlog(ownBlog)).toBe(true);
+    expect(role.canDeleteBlog(otherBlog)).toBe(true);
   });
 
   it('should let free and premium users delete only their own blog', () => {
@@ -42,9 +42,9 @@ describe('role delete permissions', () => {
       userFactory.build({ id: 1, role: 'premium' }),
     );
 
-    expect(free.canDeletePost(ownBlog)).toBe(true);
-    expect(free.canDeletePost(otherBlog)).toBe(false);
-    expect(premium.canDeletePost(ownBlog)).toBe(true);
-    expect(premium.canDeletePost(otherBlog)).toBe(false);
+    expect(free.canDeleteBlog(ownBlog)).toBe(true);
+    expect(free.canDeleteBlog(otherBlog)).toBe(false);
+    expect(premium.canDeleteBlog(ownBlog)).toBe(true);
+    expect(premium.canDeleteBlog(otherBlog)).toBe(false);
   });
 });

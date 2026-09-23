@@ -3,7 +3,7 @@ import { CreateBlogDto } from './dto/create-blog.dto.js';
 import { UpdateBlogDto } from './dto/update-blog.dto.js';
 import { UsersService } from '../users/users.service.js';
 import { Database } from '../database/database.service.js';
-import { createUserRole } from '../users/roles/create-user-role.js';
+import { getUserRole } from '../users/roles/create-user-role.js';
 
 @Injectable()
 export class BlogsService {
@@ -54,9 +54,9 @@ export class BlogsService {
   remove(id: number, actorId: number) {
     const blog = this.findOne(id);
     const actor = this.usersService.findOne(actorId);
-    const role = createUserRole(actor);
+    const role = getUserRole(actor);
 
-    if (!role.canDeletePost(blog)) {
+    if (!role.canDeleteBlog(blog)) {
       throw new ForbiddenException(`User ${actorId} cannot delete blog ${id}`);
     }
 
