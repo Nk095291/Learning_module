@@ -9,6 +9,7 @@ import { UsersService } from '../users/users.service.js';
 import { MovieShowingsService } from '../movies/movie-showings.service.js';
 import { BookedSeatsService } from './booked-seats.service.js';
 import { CreateBookedSeatDto } from './dto/create-booked-seat.dto.js';
+import { ageOn } from './calendar-age.js';
 
 @Injectable()
 export class BookingsService {
@@ -29,7 +30,7 @@ export class BookingsService {
       showing.theaterId,
     );
     this.assertSeatsAvailable(seatIds, showing.id);
-    this.assertAgeRating(createBookingDto.bookedSeats, showing.movie.ageRating);
+    this.assertAgeEligible(createBookingDto.bookedSeats, showing.movie.ageRating);
 
     const booking = {
       id: this.db.nextBookingId(),
@@ -100,22 +101,32 @@ export class BookingsService {
     }
   }
 
-  private assertAgeRating(bookedSeats: CreateBookedSeatDto[], ageRating: number) {
+  private assertAgeEligible(
+    bookedSeats: CreateBookedSeatDto[],
+    ageRating: number,
+  ) {
     for (const bookedSeat of bookedSeats) {
-      const dob = bookedSeat.userId
-        ? this.usersService.getDob(bookedSeat.userId)
-        : bookedSeat.userDOB;
-      if (!dob) {
-        throw new BadRequestException('Providing DOB is mandatory for booking');
+      const dob = this.resolveDateOfBirth(bookedSeat);
+      const dateOfBirth = new Date(dob);
+      if (isNaN(dateOfBirth.getTime())) {
+        throw new BadRequestException('Invalid date of birth');
       }
-      const age = Math.floor(
-        (Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000),
-      );
-      if (age < ageRating) {
+      if (ageOn(dateOfBirth, new Date()) < ageRating) {
         throw new BadRequestException(
           `User must be at least ${ageRating} to book this movie`,
         );
       }
     }
+  }
+
+  private resolveDateOfBirth(bookedSeat: CreateBookedSeatDto): string {
+    const dob =
+      bookedSeat.userId !== undefined
+        ? this.usersService.findOne(bookedSeat.userId).dob
+        : bookedSeat.userDOB;
+    if (!dob) {
+      throw new BadRequestException('Providing DOB is mandatory for booking');
+    }
+    return dob;
   }
 }

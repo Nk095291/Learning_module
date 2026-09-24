@@ -27,11 +27,6 @@ export class UsersService {
     return user;
   }
 
-  getDob(id: number) {
-    const user = this.db.users[id];
-    return user?.dob;
-  }
-
   update(id: number, updateUserDto: UpdateUserDto, userId: number) {
     if (isNaN(userId)) throw new BadRequestException('Invalid actor id');
     if (userId != id) throw new ForbiddenException(`User ${userId} cannot update user ${id}`)

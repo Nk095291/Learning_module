@@ -7,6 +7,22 @@ import { MovieShowingsService } from '../movies/movie-showings.service.js';
 import { MoviesService } from '../movies/movies.service.js';
 import { TheatersService } from '../theaters/theaters.service.js';
 
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+function dobYearsAgo(years: number, dayOffset = 0): string {
+  const now = new Date();
+  const year = now.getUTCFullYear() - years;
+  const month = now.getUTCMonth();
+  let day = now.getUTCDate();
+  if (month === 1 && day === 29 && !isLeapYear(year)) {
+    day = 28;
+  }
+  const dob = new Date(Date.UTC(year, month, day + dayOffset));
+  return dob.toISOString().slice(0, 10);
+}
+
   describe('BookingsService', () => {
     let db: Database;
     let service: BookingsService;
@@ -162,7 +178,7 @@ import { TheatersService } from '../theaters/theaters.service.js';
         const dto = {
           userId: 1,
           movieShowingId: 1,
-          bookedSeats: [{ seatId: 3, userDOB: '2020-01-01' }],
+          bookedSeats: [{ seatId: 3, userDOB: dobYearsAgo(5) }],
         };
 
         // when
@@ -296,6 +312,97 @@ import { TheatersService } from '../theaters/theaters.service.js';
         // then
         expect(createBooking).toThrow(NotFoundException);
         expect(createBooking).toThrow('Movie showing 999 not found');
+        expect(Object.keys(db.bookings)).toHaveLength(0);
+        expect(Object.keys(db.bookedSeats)).toHaveLength(0);
+      });
+
+      it('should accept a booking when the viewer turns exactly the age rating today', () => {
+        // given
+        const dob = dobYearsAgo(13);
+        const dto = {
+          userId: 1,
+          movieShowingId: 1,
+          bookedSeats: [{ seatId: 1, userDOB: dob }],
+        };
+
+        // when
+        const booking = service.create(dto);
+
+        // then
+        expect(booking.bookedSeats).toEqual([
+          expect.objectContaining({ seatId: 1, userDOB: dob }),
+        ]);
+        expect(db.bookings[booking.id]).toBeDefined();
+      });
+
+      it('should reject a booking when the viewers 13th birthday is tomorrow', () => {
+        // given
+        const dto = {
+          userId: 1,
+          movieShowingId: 1,
+          bookedSeats: [{ seatId: 2, userDOB: dobYearsAgo(13, 1) }],
+        };
+
+        // when
+        const createBooking = () => service.create(dto);
+
+        // then
+        expect(createBooking).toThrow(BadRequestException);
+        expect(createBooking).toThrow('User must be at least 13 to book this movie');
+        expect(Object.keys(db.bookings)).toHaveLength(0);
+        expect(Object.keys(db.bookedSeats)).toHaveLength(0);
+      });
+
+      it('should reject a booking with an unparseable date of birth', () => {
+        // given
+        const dto = {
+          userId: 1,
+          movieShowingId: 1,
+          bookedSeats: [{ seatId: 3, userDOB: 'garbage' }],
+        };
+
+        // when
+        const createBooking = () => service.create(dto);
+
+        // then
+        expect(createBooking).toThrow(BadRequestException);
+        expect(createBooking).toThrow('Invalid date of birth');
+        expect(Object.keys(db.bookings)).toHaveLength(0);
+        expect(Object.keys(db.bookedSeats)).toHaveLength(0);
+      });
+
+      it('should reject a booking whose seat references an unknown userId', () => {
+        // given
+        const dto = {
+          userId: 1,
+          movieShowingId: 1,
+          bookedSeats: [{ seatId: 1, userId: 999 }],
+        };
+
+        // when
+        const createBooking = () => service.create(dto);
+
+        // then
+        expect(createBooking).toThrow(NotFoundException);
+        expect(createBooking).toThrow('User 999 not found');
+        expect(Object.keys(db.bookings)).toHaveLength(0);
+        expect(Object.keys(db.bookedSeats)).toHaveLength(0);
+      });
+
+      it('should reject a booking whose seat has neither a userId nor a userDOB', () => {
+        // given
+        const dto = {
+          userId: 1,
+          movieShowingId: 1,
+          bookedSeats: [{ seatId: 1 }],
+        };
+
+        // when
+        const createBooking = () => service.create(dto);
+
+        // then
+        expect(createBooking).toThrow(BadRequestException);
+        expect(createBooking).toThrow('Providing DOB is mandatory for booking');
         expect(Object.keys(db.bookings)).toHaveLength(0);
         expect(Object.keys(db.bookedSeats)).toHaveLength(0);
       });
