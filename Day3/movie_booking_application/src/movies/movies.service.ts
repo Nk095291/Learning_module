@@ -9,8 +9,8 @@ export class MoviesService {
 
   create(createMovieDto: CreateMovieDto) {
     const movie = {
-      id: this.db.nextMovieId(),
       ...createMovieDto,
+      id: this.db.nextMovieId(),
       created_at: new Date(),
     };
     this.db.movies[movie.id] = movie;
@@ -18,7 +18,7 @@ export class MoviesService {
   }
 
   findAll() {
-    return this.db.movies;
+    return Object.values(this.db.movies);
   }
 
   findOne(id: number) {
@@ -36,6 +36,7 @@ export class MoviesService {
 
   remove(id: number) {
     const movie = this.findOne(id);
+    this.db.removeMovieShowingsByMovieId(id);
     delete this.db.movies[id];
     return { message: `Movie ${movie.title} (${id}) deleted successfully` };
   }

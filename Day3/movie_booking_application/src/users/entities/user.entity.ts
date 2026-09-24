@@ -1,6 +1,6 @@
 export class User {
   id: number;
   email: string;
-  dob: Date;
+  dob: string;
   created_at: Date;
 }

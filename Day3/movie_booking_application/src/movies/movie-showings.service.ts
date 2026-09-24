@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMovieShowingDto } from './dto/create-movie-showing.dto.js';
 import { UpdateMovieShowingDto } from './dto/update-movie-showing.dto.js';
 import { Database } from '../database/database.service.js';
@@ -17,8 +17,8 @@ export class MovieShowingsService {
     this.moviesService.findOne(createMovieShowingDto.movieId);
     this.theatersService.findOne(createMovieShowingDto.theaterId);
     const movieShowing = {
-      id: this.db.nextMovieShowingId(),
       ...createMovieShowingDto,
+      id: this.db.nextMovieShowingId(),
       created_at: new Date(),
     };
     this.db.movieShowings[movieShowing.id] = movieShowing;

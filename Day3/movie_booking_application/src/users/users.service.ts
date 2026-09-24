@@ -9,8 +9,8 @@ export class UsersService {
 
   create(createUserDto: CreateUserDto) {
     const user = {
-      id: this.db.nextUserId(),
       ...createUserDto,
+      id: this.db.nextUserId(),
       created_at: new Date(),
     };
     this.db.users[user.id] = user;
@@ -27,11 +27,6 @@ export class UsersService {
     return user;
   }
 
-  getDob(id: number) {
-    const user = this.db.users[id];
-    return user?.dob;
-  }
-
   update(id: number, updateUserDto: UpdateUserDto, userId: number) {
     if (isNaN(userId)) throw new BadRequestException('Invalid actor id');
     if (userId != id) throw new ForbiddenException(`User ${userId} cannot update user ${id}`)
@@ -45,7 +40,8 @@ export class UsersService {
     if (isNaN(userId)) throw new BadRequestException('Invalid actor id');
     if (userId != id) throw new ForbiddenException(`User ${userId} cannot delete user ${id}`)
     const user = this.findOne(id);
+    this.db.removeBookingsByUserId(id);
     delete this.db.users[id];
     return { message: `User ${user.email} (${id}) deleted successfully` };
-  } 
+  }
 }

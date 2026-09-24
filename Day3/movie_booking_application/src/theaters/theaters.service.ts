@@ -8,7 +8,7 @@ export class TheatersService {
   constructor(private db: Database) {}
 
   create(createTheaterDto: CreateTheaterDto) {
-    const theater = { id: this.db.nextTheaterId(), ...createTheaterDto };
+    const theater = { ...createTheaterDto, id: this.db.nextTheaterId() };
     this.db.theaters[theater.id] = theater;
     return theater;
   }
@@ -32,8 +32,9 @@ export class TheatersService {
 
   remove(id: number) {
     const theater = this.findOne(id);
-    delete this.db.theaters[id];
+    this.db.removeMovieShowingsByTheaterId(id);
     this.db.removeSeatsByTheaterId(id);
+    delete this.db.theaters[id];
     return { message: `Theater ${theater.name} (${id}) deleted successfully` };
   }
 }

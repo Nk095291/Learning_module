@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { CreateSeatDto } from './dto/create-seat.dto.js';
 import { UpdateSeatDto } from './dto/update-seat.dto.js';
 import { Database } from '../database/database.service.js';
@@ -13,7 +13,7 @@ export class SeatsService {
 
   create(createSeatDto: CreateSeatDto) {
     this.theatersService.findOne(createSeatDto.theaterId);
-    const seat = { id: this.db.nextSeatId(), ...createSeatDto };
+    const seat = { ...createSeatDto, id: this.db.nextSeatId() };
     this.db.seats[seat.id] = seat;
     return seat;
   }
@@ -26,8 +26,7 @@ export class SeatsService {
   }
 
   findOne(id: number) {
-    const seat = this.db.seats[id];
-    if (!seat) throw new NotFoundException(`Seat ${id} not found`);
+    const seat = this.getStoredSeat(id);
     return {
       ...seat,
       theater: this.theatersService.findOne(seat.theaterId),
@@ -35,18 +34,26 @@ export class SeatsService {
   }
 
   update(id: number, updateSeatDto: UpdateSeatDto) {
-    const seat = this.findOne(id);
+    const seat = this.getStoredSeat(id);
     if (updateSeatDto.theaterId && updateSeatDto.theaterId !== seat.theaterId) {
       throw new BadRequestException('Seat theater id cannot be changed');
     }
     Object.assign(seat, updateSeatDto);
-    this.db.seats[id] = seat;
     return seat;
   }
 
   remove(id: number) {
-    const seat = this.findOne(id);
+    const seat = this.getStoredSeat(id);
+    if (this.db.hasBookingsForSeat(id)) {
+      throw new ConflictException(`Seat ${id} has bookings and cannot be deleted`);
+    }
     delete this.db.seats[id];
     return { message: `Seat ${seat.seatNumber} (${id}) deleted successfully` };
+  }
+
+  private getStoredSeat(id: number) {
+    const seat = this.db.seats[id];
+    if (!seat) throw new NotFoundException(`Seat ${id} not found`);
+    return seat;
   }
 }

@@ -9,6 +9,8 @@ import { UsersService } from '../users/users.service.js';
 import { MovieShowingsService } from '../movies/movie-showings.service.js';
 import { BookedSeatsService } from './booked-seats.service.js';
 import { CreateBookedSeatDto } from './dto/create-booked-seat.dto.js';
+import { ageOn } from './calendar-age.js';
+import { Booking } from './entities/booking.entity.js';
 
 @Injectable()
 export class BookingsService {
@@ -24,20 +26,14 @@ export class BookingsService {
     const showing = this.movieShowingsService.findOne(
       createBookingDto.movieShowingId,
     );
-    const seats = createBookingDto.bookedSeats.map((bookedSeat) => bookedSeat.seatId);
+    const seatIds = this.assertSeatSelectionValid(
+      createBookingDto.bookedSeats,
+      showing.theaterId,
+    );
+    this.assertSeatsAvailable(seatIds, showing.id);
+    this.assertAgeEligible(createBookingDto.bookedSeats, showing.movie.ageRating);
 
-    if (!this.bookedSeatsService.areSeatsAvailable(seats, showing.id)) {
-      throw new BadRequestException('Selected seats are not available');
-    }
-
-    this.assertAgeRating(createBookingDto.bookedSeats, showing.movie.ageRating);
-
-    const booking = {
-      id: this.db.nextBookingId(),
-      ...createBookingDto,
-      created_at: new Date(),
-    };
-    this.db.bookings[booking.id] = booking;
+    const booking = this.saveBooking(createBookingDto);
 
     for (const bookedSeat of createBookingDto.bookedSeats) {
       this.bookedSeatsService.create(bookedSeat, booking.id, showing.id);
@@ -70,25 +66,74 @@ export class BookingsService {
     };
   }
 
-  private assertAgeRating(bookedSeats: CreateBookedSeatDto[], ageRating: number) {
-    for (const bookedSeat of bookedSeats) {
-      const dob = bookedSeat.userId
-        ? this.usersService.getDob(bookedSeat.userId)
-        : bookedSeat.userDOB;
-      
-        console.log(dob);
-
-      if (!dob) {
-        throw new BadRequestException('Providing DOB is mandatory for booking');
+  private assertSeatSelectionValid(
+    bookedSeats: CreateBookedSeatDto[] | undefined,
+    theaterId: number,
+  ): number[] {
+    if (!bookedSeats || bookedSeats.length === 0) {
+      throw new BadRequestException('At least one seat must be selected');
+    }
+    const seatIds = bookedSeats.map((bookedSeat) => bookedSeat.seatId);
+    if (new Set(seatIds).size !== seatIds.length) {
+      throw new BadRequestException('Each seat can only be selected once');
+    }
+    for (const seatId of seatIds) {
+      const seat = this.db.seats[seatId];
+      if (!seat) {
+        throw new BadRequestException(`Seat ${seatId} does not exist`);
       }
-      const age = Math.floor(
-        (Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000),
-      );
-      if (age < ageRating) {
+      if (seat.theaterId !== theaterId) {
+        throw new BadRequestException(
+          `Seat ${seatId} is not in the theater of this showing`,
+        );
+      }
+    }
+    return seatIds;
+  }
+
+  private assertSeatsAvailable(seatIds: number[], movieShowingId: number) {
+    if (!this.bookedSeatsService.areSeatsAvailable(seatIds, movieShowingId)) {
+      throw new BadRequestException('Selected seats are not available');
+    }
+  }
+
+  private assertAgeEligible(
+    bookedSeats: CreateBookedSeatDto[],
+    ageRating: number,
+  ) {
+    for (const bookedSeat of bookedSeats) {
+      const dob = this.resolveDateOfBirth(bookedSeat);
+      const dateOfBirth = new Date(dob);
+      if (isNaN(dateOfBirth.getTime())) {
+        throw new BadRequestException('Invalid date of birth');
+      }
+      if (ageOn(dateOfBirth, new Date()) < ageRating) {
         throw new BadRequestException(
           `User must be at least ${ageRating} to book this movie`,
         );
       }
     }
+  }
+
+  private resolveDateOfBirth(bookedSeat: CreateBookedSeatDto): string {
+    const dob =
+      bookedSeat.userId !== undefined
+        ? this.usersService.findOne(bookedSeat.userId).dob
+        : bookedSeat.userDOB;
+    if (!dob) {
+      throw new BadRequestException('Providing DOB is mandatory for booking');
+    }
+    return dob;
+  }
+
+  private saveBooking(createBookingDto: CreateBookingDto): Booking {
+    const booking: Booking = {
+      id: this.db.nextBookingId(),
+      userId: createBookingDto.userId,
+      movieShowingId: createBookingDto.movieShowingId,
+      created_at: new Date(),
+    };
+    this.db.bookings[booking.id] = booking;
+    return booking;
   }
 }

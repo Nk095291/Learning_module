@@ -1,11 +1,9 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { Database } from '../database/database.service.js';
-import { USER_ROLES} from './entities/user.entity.js';
-import { BadRequestException } from '@nestjs/common';
+import { DEFAULT_ROLE, USER_ROLES } from './entities/user.entity.js';
 import { getUserRole } from './roles/get-user-role.js';
-import { BlogsService } from '../blogs/blogs.service.js';
 
 @Injectable()
 export class UsersService {
@@ -15,7 +13,7 @@ export class UsersService {
     const user = { 
       id : this.db.nextUserId(),
       ...createUserDto,
-      role: USER_ROLES[2],   // default role is free
+      role: DEFAULT_ROLE,
     };
 
     this.db.users[user.id] = user;
