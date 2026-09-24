@@ -59,7 +59,6 @@ export class Database {
   private movieId = 2;
   private movieShowingId = 2;
   private bookingId = 1;
-  private seatGroupId = 1;
   private bookedSeatId = 1;
 
   nextUserId() {
@@ -84,10 +83,6 @@ export class Database {
 
   nextBookingId() {
     return this.bookingId++;
-  }
-
-  nextSeatGroupId() {
-    return this.seatGroupId++;
   }
 
   nextBookedSeatId() {

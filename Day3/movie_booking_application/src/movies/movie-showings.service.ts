@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMovieShowingDto } from './dto/create-movie-showing.dto.js';
 import { UpdateMovieShowingDto } from './dto/update-movie-showing.dto.js';
 import { Database } from '../database/database.service.js';
