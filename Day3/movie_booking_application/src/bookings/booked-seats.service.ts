@@ -31,7 +31,6 @@ export class BookedSeatsService {
   }
 
   areSeatsAvailable(seatIds: number[], movieShowingId: number) {
-    const bookings = this.findAllByMovieShowingId(movieShowingId);
-    return seatIds.every((seatId) => !bookings.some((bookedSeat) => bookedSeat.seatId === seatId));
+    return seatIds.every((seatId) => !this.db.isSeatBookedForShowing(seatId, movieShowingId));
   }
 }

@@ -173,6 +173,85 @@ function dobYearsAgo(years: number, dayOffset = 0): string {
         expect(Object.keys(db.bookings)).toHaveLength(1);
       });
 
+      it('should reject a second booking of the same seat on the same showing', () => {
+        // given
+        service.create({
+          userId: 1,
+          movieShowingId: 1,
+          bookedSeats: [{ seatId: 2, userId: 1 }],
+        });
+
+        // when
+        const bookAgain = () =>
+          service.create({
+            userId: 2,
+            movieShowingId: 1,
+            bookedSeats: [{ seatId: 2, userId: 2 }],
+          });
+
+        // then
+        expect(bookAgain).toThrow(BadRequestException);
+        expect(bookAgain).toThrow('Selected seats are not available');
+        expect(Object.keys(db.bookings)).toHaveLength(1);
+        expect(Object.keys(db.bookedSeats)).toHaveLength(1);
+      });
+
+      it('should allow booking a different seat on the same showing after another seat was booked', () => {
+        // given
+        service.create({
+          userId: 1,
+          movieShowingId: 1,
+          bookedSeats: [{ seatId: 2, userId: 1 }],
+        });
+
+        // when
+        const booking = service.create({
+          userId: 2,
+          movieShowingId: 1,
+          bookedSeats: [{ seatId: 1, userId: 2 }],
+        });
+
+        // then
+        expect(booking.bookedSeats).toEqual([
+          expect.objectContaining({ seatId: 1, userId: 2, movieShowingId: 1 }),
+        ]);
+        expect(Object.keys(db.bookings)).toHaveLength(2);
+      });
+
+      it('should allow booking a seat on another showing after it was booked on the first showing', () => {
+        // given
+        const movieShowingsService = new MovieShowingsService(
+          db,
+          new MoviesService(db),
+          new TheatersService(db),
+        );
+        movieShowingsService.create({
+          movieId: 1,
+          theaterId: 1,
+          startTime: '21:00',
+          endTime: '23:59',
+          showDate: '2026-09-22',
+        });
+        service.create({
+          userId: 1,
+          movieShowingId: 1,
+          bookedSeats: [{ seatId: 1, userId: 1 }],
+        });
+
+        // when
+        const booking = service.create({
+          userId: 2,
+          movieShowingId: 2,
+          bookedSeats: [{ seatId: 1, userId: 2 }],
+        });
+
+        // then
+        expect(booking.bookedSeats).toEqual([
+          expect.objectContaining({ seatId: 1, userId: 2, movieShowingId: 2 }),
+        ]);
+        expect(Object.keys(db.bookings)).toHaveLength(2);
+      });
+
       it('should throw an error when user failed to meet age rating requirements', () => {
         // given
         const dto = {

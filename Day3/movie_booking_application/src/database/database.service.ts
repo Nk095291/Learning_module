@@ -108,8 +108,14 @@ export class Database {
   getAvailableSeats(movieShowingId: number) {
     const movieShowing = this.movieShowings[movieShowingId];
     const availableSeats = Object.values(this.seats).filter((seat) => {
-      return seat.theaterId === movieShowing.theaterId && !this.bookedSeats[seat.id];
+      return seat.theaterId === movieShowing.theaterId && !this.isSeatBookedForShowing(seat.id, movieShowingId);
     });
     return availableSeats;
+  }
+
+  isSeatBookedForShowing(seatId: number, movieShowingId: number) {
+    return Object.values(this.bookedSeats).some(
+      (bookedSeat) => bookedSeat.movieShowingId === movieShowingId && bookedSeat.seatId === seatId,
+    );
   }
 }
