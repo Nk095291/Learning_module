@@ -5,7 +5,7 @@ import { FreeUser } from './free-user.role.js';
 import { userFactory } from '../factories/user.factory.js';
 import { blogFactory } from '../../blogs/factories/blog.factory.js';
 
-describe('createUserRole', () => {
+describe('getUserRole', () => {
   it('should return Admin for role admin', () => {
     expect(getUserRole(userFactory.build({ role: 'admin' }))).toBeInstanceOf(
       Admin,

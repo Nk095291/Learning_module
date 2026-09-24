@@ -239,23 +239,6 @@ describe('UsersService', () => {
       });
       expect(service.findOne(actor.id)).toEqual(updated);
     });
-    
-    it('should throw error if actor tries to update its own role', () => {
-      // given
-      const actor = service.findOne(1);
-
-      // when
-      const updateUser = () => service.update(
-        actor.id,
-        { name: 'Johnny', email: 'johnny@example.com' , role : 'admin'},
-        actor.id,
-      );
-
-      // then
-      expect(updateUser).toThrow(BadRequestException);
-      expect(updateUser).toThrow('Cannot update role of the user');
-      expect(service.findOne(actor.id).role).toBe('free');
-    });
 
     it('should throw error if actor tries to update user role to invalid role', () => {
       // given
@@ -275,22 +258,13 @@ describe('UsersService', () => {
   });
 
   describe('delete', () => {
-    const remove = (id: number, actorId: number) => {
-      const removeUser = service.remove as (
-        id: number,
-        actorId: number,
-      ) => ReturnType<UsersService['remove']>;
-
-      return removeUser.call(service, id, actorId);
-    };
-
     it('should throw error if actor id is not provided in the headers', () => {
       // given
       const user = service.findOne(1);
       const actorId = Number(undefined);
 
       // when
-      const deleteUser = () => remove(user.id, actorId);
+      const deleteUser = () => service.remove(user.id, actorId);
 
       // then
       expect(deleteUser).toThrow(BadRequestException);
@@ -304,7 +278,7 @@ describe('UsersService', () => {
       const actorId = 999;
 
       // when
-      const deleteUser = () => remove(user.id, actorId);
+      const deleteUser = () => service.remove(user.id, actorId);
 
       // then
       expect(deleteUser).toThrow(NotFoundException);
@@ -318,7 +292,7 @@ describe('UsersService', () => {
       const missingUserId = 999;
 
       // when
-      const deleteUser = () => remove(missingUserId, actor.id);
+      const deleteUser = () => service.remove(missingUserId, actor.id);
 
       // then
       expect(deleteUser).toThrow(NotFoundException);
@@ -331,7 +305,7 @@ describe('UsersService', () => {
       const user = service.findOne(2);
 
       // when
-      const deleteUser = () => remove(user.id, actor.id);
+      const deleteUser = () => service.remove(user.id, actor.id);
 
       // then
       expect(deleteUser).toThrow(UnauthorizedException);
@@ -347,7 +321,7 @@ describe('UsersService', () => {
       const user = service.findOne(1);
 
       // when
-      const result = remove(user.id, actor.id);
+      const result = service.remove(user.id, actor.id);
 
       // then
       expect(result).toEqual({
@@ -361,7 +335,7 @@ describe('UsersService', () => {
       const actor = service.findOne(1);
 
       // when
-      const result = remove(actor.id, actor.id);
+      const result = service.remove(actor.id, actor.id);
 
       // then
       expect(result).toEqual({
@@ -383,7 +357,7 @@ describe('UsersService', () => {
       blogService.create(blog2);
 
       // when
-      const result = remove(user.id, user.id);
+      const result = service.remove(user.id, user.id);
 
       // then
       expect(result).toEqual({

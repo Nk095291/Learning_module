@@ -20,7 +20,7 @@ describe('BlogsService', () => {
 
   beforeEach(() => {
     db = new Database();
-    usersService = new UsersService(db, {} as BlogsService);
+    usersService = new UsersService(db);
     service = new BlogsService(db, usersService);
 
     // NOTE : in production we persist the data in the database but for now we are using
