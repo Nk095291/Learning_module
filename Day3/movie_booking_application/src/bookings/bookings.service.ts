@@ -24,12 +24,11 @@ export class BookingsService {
     const showing = this.movieShowingsService.findOne(
       createBookingDto.movieShowingId,
     );
-    const seats = createBookingDto.bookedSeats.map((bookedSeat) => bookedSeat.seatId);
-
-    if (!this.bookedSeatsService.areSeatsAvailable(seats, showing.id)) {
-      throw new BadRequestException('Selected seats are not available');
-    }
-
+    const seatIds = this.assertSeatSelectionValid(
+      createBookingDto.bookedSeats,
+      showing.theaterId,
+    );
+    this.assertSeatsAvailable(seatIds, showing.id);
     this.assertAgeRating(createBookingDto.bookedSeats, showing.movie.ageRating);
 
     const booking = {
@@ -68,6 +67,37 @@ export class BookingsService {
       user : this.usersService.findOne(booking.userId),
       movieShowing : this.movieShowingsService.findOne(booking.movieShowingId),
     };
+  }
+
+  private assertSeatSelectionValid(
+    bookedSeats: CreateBookedSeatDto[] | undefined,
+    theaterId: number,
+  ): number[] {
+    if (!bookedSeats || bookedSeats.length === 0) {
+      throw new BadRequestException('At least one seat must be selected');
+    }
+    const seatIds = bookedSeats.map((bookedSeat) => bookedSeat.seatId);
+    if (new Set(seatIds).size !== seatIds.length) {
+      throw new BadRequestException('Each seat can only be selected once');
+    }
+    for (const seatId of seatIds) {
+      const seat = this.db.seats[seatId];
+      if (!seat) {
+        throw new BadRequestException(`Seat ${seatId} does not exist`);
+      }
+      if (seat.theaterId !== theaterId) {
+        throw new BadRequestException(
+          `Seat ${seatId} is not in the theater of this showing`,
+        );
+      }
+    }
+    return seatIds;
+  }
+
+  private assertSeatsAvailable(seatIds: number[], movieShowingId: number) {
+    if (!this.bookedSeatsService.areSeatsAvailable(seatIds, movieShowingId)) {
+      throw new BadRequestException('Selected seats are not available');
+    }
   }
 
   private assertAgeRating(bookedSeats: CreateBookedSeatDto[], ageRating: number) {

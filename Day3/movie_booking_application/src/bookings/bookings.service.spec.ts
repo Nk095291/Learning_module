@@ -105,11 +105,18 @@ import { TheatersService } from '../theaters/theaters.service.js';
         const booking = service.create(dto);
 
         // then
+        expect(booking).toMatchObject({
+          user: { id: 1, email: 'john@example.com' },
+          movieShowing: { id: 1, theaterId: 1 },
+        });
         expect(booking.bookedSeats).toEqual([
           expect.objectContaining({ seatId: 1, userId: 1, bookingId: booking.id }),
           expect.objectContaining({ seatId: 2, userId: 2, bookingId: booking.id }),
         ]);
-        expect(db.bookings[booking.id]).toBeDefined();
+        expect(db.bookings[booking.id]).toMatchObject({
+          userId: 1,
+          movieShowingId: 1,
+        });
         expect(db.bookedSeats[booking.bookedSeats[0].id]).toMatchObject({
           id: booking.bookedSeats[0].id,
           seatId: 1,
@@ -167,6 +174,131 @@ import { TheatersService } from '../theaters/theaters.service.js';
         expect(Object.keys(db.bookings)).toHaveLength(0);
       });
 
+      it('should reject a booking with an empty bookedSeats list', () => {
+        // given
+        const dto = {
+          userId: 1,
+          movieShowingId: 1,
+          bookedSeats: [],
+        };
+
+        // when
+        const createBooking = () => service.create(dto);
+
+        // then
+        expect(createBooking).toThrow(BadRequestException);
+        expect(createBooking).toThrow('At least one seat must be selected');
+        expect(Object.keys(db.bookings)).toHaveLength(0);
+        expect(Object.keys(db.bookedSeats)).toHaveLength(0);
+      });
+
+      it('should reject a booking with no bookedSeats property', () => {
+        // given
+        const dto = { userId: 1, movieShowingId: 1 } as any;
+
+        // when
+        const createBooking = () => service.create(dto);
+
+        // then
+        expect(createBooking).toThrow(BadRequestException);
+        expect(createBooking).toThrow('At least one seat must be selected');
+        expect(Object.keys(db.bookings)).toHaveLength(0);
+        expect(Object.keys(db.bookedSeats)).toHaveLength(0);
+      });
+
+      it('should reject a booking that lists the same seatId twice', () => {
+        // given
+        const dto = {
+          userId: 1,
+          movieShowingId: 1,
+          bookedSeats: [
+            { seatId: 1, userId: 1 },
+            { seatId: 1, userId: 1 },
+          ],
+        };
+
+        // when
+        const createBooking = () => service.create(dto);
+
+        // then
+        expect(createBooking).toThrow(BadRequestException);
+        expect(createBooking).toThrow('Each seat can only be selected once');
+        expect(Object.keys(db.bookings)).toHaveLength(0);
+        expect(Object.keys(db.bookedSeats)).toHaveLength(0);
+      });
+
+      it('should reject a booking with a seatId that does not exist', () => {
+        // given
+        const dto = {
+          userId: 1,
+          movieShowingId: 1,
+          bookedSeats: [{ seatId: 999, userId: 1 }],
+        };
+
+        // when
+        const createBooking = () => service.create(dto);
+
+        // then
+        expect(createBooking).toThrow(BadRequestException);
+        expect(createBooking).toThrow('Seat 999 does not exist');
+        expect(Object.keys(db.bookings)).toHaveLength(0);
+        expect(Object.keys(db.bookedSeats)).toHaveLength(0);
+      });
+
+      it('should reject a booking with a seat from a different theater than the showing', () => {
+        // given
+        db.seats[4] = { id: 4, theaterId: 2, seatNumber: 'A1', row: 'A', col: 1 };
+        const dto = {
+          userId: 1,
+          movieShowingId: 1,
+          bookedSeats: [{ seatId: 4, userId: 1 }],
+        };
+
+        // when
+        const createBooking = () => service.create(dto);
+
+        // then
+        expect(createBooking).toThrow(BadRequestException);
+        expect(createBooking).toThrow('Seat 4 is not in the theater of this showing');
+        expect(Object.keys(db.bookings)).toHaveLength(0);
+        expect(Object.keys(db.bookedSeats)).toHaveLength(0);
+      });
+
+      it('should reject a booking for an unknown booking userId', () => {
+        // given
+        const dto = {
+          userId: 999,
+          movieShowingId: 1,
+          bookedSeats: [{ seatId: 1, userId: 1 }],
+        };
+
+        // when
+        const createBooking = () => service.create(dto);
+
+        // then
+        expect(createBooking).toThrow(NotFoundException);
+        expect(createBooking).toThrow('User 999 not found');
+        expect(Object.keys(db.bookings)).toHaveLength(0);
+        expect(Object.keys(db.bookedSeats)).toHaveLength(0);
+      });
+
+      it('should reject a booking for an unknown movieShowingId', () => {
+        // given
+        const dto = {
+          userId: 1,
+          movieShowingId: 999,
+          bookedSeats: [{ seatId: 1, userId: 1 }],
+        };
+
+        // when
+        const createBooking = () => service.create(dto);
+
+        // then
+        expect(createBooking).toThrow(NotFoundException);
+        expect(createBooking).toThrow('Movie showing 999 not found');
+        expect(Object.keys(db.bookings)).toHaveLength(0);
+        expect(Object.keys(db.bookedSeats)).toHaveLength(0);
+      });
 
     });
     
