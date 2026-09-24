@@ -43,4 +43,15 @@ describe('MoviesService', () => {
       expect(movie.created_at).not.toEqual(suppliedCreatedAt);
     });
   });
+
+  describe('findAll', () => {
+    it('should return an array of movies that includes Inception', () => {
+      // given when
+      const movies = service.findAll();
+
+      // then
+      expect(Array.isArray(movies)).toBe(true);
+      expect(movies).toContainEqual(expect.objectContaining({ id: 1, title: 'Inception' }));
+    });
+  });
 });

@@ -26,8 +26,7 @@ export class SeatsService {
   }
 
   findOne(id: number) {
-    const seat = this.db.seats[id];
-    if (!seat) throw new NotFoundException(`Seat ${id} not found`);
+    const seat = this.getStoredSeat(id);
     return {
       ...seat,
       theater: this.theatersService.findOne(seat.theaterId),
@@ -35,18 +34,23 @@ export class SeatsService {
   }
 
   update(id: number, updateSeatDto: UpdateSeatDto) {
-    const seat = this.findOne(id);
+    const seat = this.getStoredSeat(id);
     if (updateSeatDto.theaterId && updateSeatDto.theaterId !== seat.theaterId) {
       throw new BadRequestException('Seat theater id cannot be changed');
     }
     Object.assign(seat, updateSeatDto);
-    this.db.seats[id] = seat;
     return seat;
   }
 
   remove(id: number) {
-    const seat = this.findOne(id);
+    const seat = this.getStoredSeat(id);
     delete this.db.seats[id];
     return { message: `Seat ${seat.seatNumber} (${id}) deleted successfully` };
+  }
+
+  private getStoredSeat(id: number) {
+    const seat = this.db.seats[id];
+    if (!seat) throw new NotFoundException(`Seat ${id} not found`);
+    return seat;
   }
 }

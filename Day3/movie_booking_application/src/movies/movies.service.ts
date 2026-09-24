@@ -18,7 +18,7 @@ export class MoviesService {
   }
 
   findAll() {
-    return this.db.movies;
+    return Object.values(this.db.movies);
   }
 
   findOne(id: number) {
