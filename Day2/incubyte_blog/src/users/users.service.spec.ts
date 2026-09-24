@@ -8,14 +8,18 @@ import { Database } from '../database/database.service.js';
 import { userFactory } from './factories/user.factory.js';
 import { UserRoleName } from './entities/user.entity.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
+import { BlogsService } from '../blogs/blogs.service.js';
+import { blogFactory } from '../blogs/factories/blog.factory.js';
 
 describe('UsersService', () => {
   let db: Database;
   let service: UsersService;
+  let blogService: BlogsService;
 
   beforeEach(() => {
     db = new Database();
     service = new UsersService(db);
+    blogService = new BlogsService(db, service);
   });
 
   describe('create', () => {
@@ -365,5 +369,31 @@ describe('UsersService', () => {
       });
       expect(() => service.findOne(actor.id)).toThrow(NotFoundException);
     });
+
+    it('should delete user and all blogs associated with the user', () => {
+      // given
+      const user = service.findOne(1);
+      const blog = blogFactory.build({
+        author: user,
+      });
+      const blog2 = blogFactory.build({
+        author: user,
+      });
+      blogService.create(blog);
+      blogService.create(blog2);
+
+      // when
+      const result = remove(user.id, user.id);
+
+      // then
+      expect(result).toEqual({
+        message: `User ${user.name} (${user.id}) deleted successfully`,
+      });
+      expect(() => service.findOne(user.id)).toThrow(NotFoundException);
+      expect(() => blogService.findOne(blog.id)).toThrow(NotFoundException);
+      expect(() => blogService.findOne(blog2.id)).toThrow(NotFoundException);
+      expect(Object.keys(db.blogs).length).toBe(0);
+    });
+
   });
 });

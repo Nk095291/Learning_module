@@ -8,6 +8,9 @@ export class Admin implements UserRole {
   canDeleteBlog(_blog: Blog): boolean {
     return true;
   }
+  canUpdateBlog(_blog: Blog): boolean {
+    return true;
+  }
   canUpdate(user: User): boolean {
     return true;
   }

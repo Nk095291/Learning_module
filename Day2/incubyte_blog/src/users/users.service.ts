@@ -4,7 +4,8 @@ import { UpdateUserDto } from './dto/update-user.dto.js';
 import { Database } from '../database/database.service.js';
 import { USER_ROLES} from './entities/user.entity.js';
 import { BadRequestException } from '@nestjs/common';
-import { getUserRole } from './roles/create-user-role.js';
+import { getUserRole } from './roles/get-user-role.js';
+import { BlogsService } from '../blogs/blogs.service.js';
 
 @Injectable()
 export class UsersService {
@@ -73,6 +74,8 @@ export class UsersService {
     if(!actorRole.canDelete(user)) {
       throw new UnauthorizedException(`User ${actorId} cannot delete user ${id}`);
     }
+
+    this.db.removeByAuthorId(id);
 
     delete this.db.users[id];
     return { message: `User ${user.name} (${id}) deleted successfully` };

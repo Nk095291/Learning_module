@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Headers } from '@nestjs/common';
 import { BlogsService } from './blogs.service.js';
 import { CreateBlogDto } from './dto/create-blog.dto.js';
 import { UpdateBlogDto } from './dto/update-blog.dto.js';
@@ -23,12 +23,12 @@ export class BlogsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBlogDto: UpdateBlogDto) {
-    return this.blogsService.update(+id, updateBlogDto);
+  update(@Param('id') id: string, @Body() updateBlogDto: UpdateBlogDto, @Headers('user-id') actorId: number) {
+    return this.blogsService.update(+id, updateBlogDto, actorId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @Query('actorId') actorId: string) {
-    return this.blogsService.remove(+id, +actorId);
+  remove(@Param('id') id: string, @Headers('user-id') actorId: number) {
+    return this.blogsService.remove(+id, actorId);
   }
 }

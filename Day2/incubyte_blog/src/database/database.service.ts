@@ -22,4 +22,12 @@ export class Database {
   nextBlogId() {
     return this.blogId++;
   }
+
+  removeByAuthorId(authorId: number) {
+    Object.values(this.blogs).forEach((blog) => {
+      if (blog.authorId === authorId) {
+        delete this.blogs[blog.id];
+      }
+    });
+  }
 }

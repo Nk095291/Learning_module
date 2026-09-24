@@ -1,9 +1,9 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateBlogDto } from './dto/create-blog.dto.js';
 import { UpdateBlogDto } from './dto/update-blog.dto.js';
 import { UsersService } from '../users/users.service.js';
 import { Database } from '../database/database.service.js';
-import { getUserRole } from '../users/roles/create-user-role.js';
+import { getUserRole } from '../users/roles/get-user-role.js';
 
 @Injectable()
 export class BlogsService {
@@ -15,9 +15,6 @@ export class BlogsService {
 
   create(createBlogDto: CreateBlogDto) {
     const author = this.usersService.findOne(createBlogDto.authorId);
-
-    if(!author) throw new NotFoundException(`Author ${createBlogDto.authorId} not found`);
-
     const blog = { id : this.db.nextBlogId(), ...createBlogDto, author};
     this.db.blogs[blog.id] = blog;
     return blog;
@@ -39,12 +36,18 @@ export class BlogsService {
     };
   }
 
-  update(id: number, updateBlogDto: UpdateBlogDto) {
+  update(id: number, updateBlogDto: UpdateBlogDto, actorId: number) {
+    if (Number.isNaN(actorId)) throw new BadRequestException('Actor ID is required');
     const blog = this.findOne(id);
-  
+    const actor = this.usersService.findOne(actorId);
+    const role = getUserRole(actor);
+
+    if (!role.canUpdateBlog(blog)) {
+      throw new ForbiddenException(`User ${actorId} cannot update blog ${id}`);
+    }
+
     if (updateBlogDto.authorId) {
       const author = this.usersService.findOne(updateBlogDto.authorId);
-      if(!author) throw new NotFoundException(`Author ${updateBlogDto.authorId} not found`);
     }
     Object.assign(blog, updateBlogDto);
     this.db.blogs[id] = blog;
@@ -52,6 +55,7 @@ export class BlogsService {
   }
 
   remove(id: number, actorId: number) {
+    if (Number.isNaN(actorId)) throw new BadRequestException('Actor ID is required');
     const blog = this.findOne(id);
     const actor = this.usersService.findOne(actorId);
     const role = getUserRole(actor);
