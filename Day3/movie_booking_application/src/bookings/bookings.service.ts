@@ -10,6 +10,7 @@ import { MovieShowingsService } from '../movies/movie-showings.service.js';
 import { BookedSeatsService } from './booked-seats.service.js';
 import { CreateBookedSeatDto } from './dto/create-booked-seat.dto.js';
 import { ageOn } from './calendar-age.js';
+import { Booking } from './entities/booking.entity.js';
 
 @Injectable()
 export class BookingsService {
@@ -32,12 +33,7 @@ export class BookingsService {
     this.assertSeatsAvailable(seatIds, showing.id);
     this.assertAgeEligible(createBookingDto.bookedSeats, showing.movie.ageRating);
 
-    const booking = {
-      id: this.db.nextBookingId(),
-      ...createBookingDto,
-      created_at: new Date(),
-    };
-    this.db.bookings[booking.id] = booking;
+    const booking = this.saveBooking(createBookingDto);
 
     for (const bookedSeat of createBookingDto.bookedSeats) {
       this.bookedSeatsService.create(bookedSeat, booking.id, showing.id);
@@ -128,5 +124,16 @@ export class BookingsService {
       throw new BadRequestException('Providing DOB is mandatory for booking');
     }
     return dob;
+  }
+
+  private saveBooking(createBookingDto: CreateBookingDto): Booking {
+    const booking: Booking = {
+      id: this.db.nextBookingId(),
+      userId: createBookingDto.userId,
+      movieShowingId: createBookingDto.movieShowingId,
+      created_at: new Date(),
+    };
+    this.db.bookings[booking.id] = booking;
+    return booking;
   }
 }

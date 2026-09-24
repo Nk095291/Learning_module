@@ -53,8 +53,8 @@ export class Database {
   bookings: Record<number, Booking> = {};
   bookedSeats: Record<number, BookedSeat> = {};
 
-  private userId = 2;
-  private theaterId = 2;
+  private userId = 3;
+  private theaterId = 3;
   private seatId = 4;
   private movieId = 2;
   private movieShowingId = 2;

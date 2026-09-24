@@ -9,8 +9,8 @@ export class UsersService {
 
   create(createUserDto: CreateUserDto) {
     const user = {
-      id: this.db.nextUserId(),
       ...createUserDto,
+      id: this.db.nextUserId(),
       created_at: new Date(),
     };
     this.db.users[user.id] = user;

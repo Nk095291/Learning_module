@@ -26,6 +26,46 @@ describe('MovieShowingsService', () => {
     );
   });
 
+  describe('create', () => {
+    it('should ignore a client-supplied id', () => {
+      // given
+      const dto = {
+        movieId: 1,
+        theaterId: 1,
+        startTime: '21:00',
+        endTime: '23:59',
+        showDate: '2026-09-22',
+        id: 1,
+      } as any;
+
+      // when
+      const showing = movieShowingsService.create(dto);
+
+      // then
+      expect(showing.id).toBe(2);
+      expect(db.movieShowings[1].startTime).toBe('18:00');
+    });
+
+    it('should ignore a client-supplied created_at', () => {
+      // given
+      const suppliedCreatedAt = new Date('2000-01-01');
+      const dto = {
+        movieId: 1,
+        theaterId: 1,
+        startTime: '21:00',
+        endTime: '23:59',
+        showDate: '2026-09-22',
+        created_at: suppliedCreatedAt,
+      } as any;
+
+      // when
+      const showing = movieShowingsService.create(dto);
+
+      // then
+      expect(showing.created_at).not.toEqual(suppliedCreatedAt);
+    });
+  });
+
   describe('findOne', () => {
     it('should leave out a seat booked for that showing from the available seats', () => {
       // given

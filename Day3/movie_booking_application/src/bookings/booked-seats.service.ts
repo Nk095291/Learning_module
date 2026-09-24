@@ -12,8 +12,8 @@ export class BookedSeatsService {
 
   create(createBookedSeatDto: CreateBookedSeatDto, bookingId: number, movieShowingId: number) {
     const bookedSeat = {
-      id: this.db.nextBookedSeatId(),
       ...createBookedSeatDto,
+      id: this.db.nextBookedSeatId(),
       created_at: new Date(),
       bookingId: bookingId,
       movieShowingId: movieShowingId,

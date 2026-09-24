@@ -13,7 +13,7 @@ export class SeatsService {
 
   create(createSeatDto: CreateSeatDto) {
     this.theatersService.findOne(createSeatDto.theaterId);
-    const seat = { id: this.db.nextSeatId(), ...createSeatDto };
+    const seat = { ...createSeatDto, id: this.db.nextSeatId() };
     this.db.seats[seat.id] = seat;
     return seat;
   }

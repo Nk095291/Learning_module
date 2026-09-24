@@ -8,7 +8,7 @@ export class TheatersService {
   constructor(private db: Database) {}
 
   create(createTheaterDto: CreateTheaterDto) {
-    const theater = { id: this.db.nextTheaterId(), ...createTheaterDto };
+    const theater = { ...createTheaterDto, id: this.db.nextTheaterId() };
     this.db.theaters[theater.id] = theater;
     return theater;
   }

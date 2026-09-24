@@ -9,8 +9,8 @@ export class MoviesService {
 
   create(createMovieDto: CreateMovieDto) {
     const movie = {
-      id: this.db.nextMovieId(),
       ...createMovieDto,
+      id: this.db.nextMovieId(),
       created_at: new Date(),
     };
     this.db.movies[movie.id] = movie;

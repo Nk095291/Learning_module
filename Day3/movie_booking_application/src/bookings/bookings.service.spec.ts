@@ -486,6 +486,65 @@ function dobYearsAgo(years: number, dayOffset = 0): string {
         expect(Object.keys(db.bookedSeats)).toHaveLength(0);
       });
 
+      it('should ignore a client-supplied id and not overwrite an existing booking', () => {
+        // given
+        const first = service.create({
+          userId: 1,
+          movieShowingId: 1,
+          bookedSeats: [{ seatId: 1, userId: 1 }],
+        });
+        const dto = {
+          userId: 2,
+          movieShowingId: 1,
+          bookedSeats: [{ seatId: 2, userId: 2 }],
+          id: 99,
+        } as any;
+
+        // when
+        const second = service.create(dto);
+
+        // then
+        expect(first.id).toBe(1);
+        expect(second.id).toBe(2);
+        expect(db.bookings[1]).toMatchObject({ id: 1, userId: 1 });
+        expect(db.bookings[2]).toMatchObject({ id: 2, userId: 2 });
+      });
+
+      it('should ignore a client-supplied created_at', () => {
+        // given
+        const suppliedCreatedAt = new Date('2000-01-01');
+        const dto = {
+          userId: 1,
+          movieShowingId: 1,
+          bookedSeats: [{ seatId: 1, userId: 1 }],
+          created_at: suppliedCreatedAt,
+        } as any;
+
+        // when
+        const booking = service.create(dto);
+
+        // then
+        expect(booking.created_at).not.toEqual(suppliedCreatedAt);
+      });
+
+      it('should store only id, userId, movieShowingId and created_at on the booking record', () => {
+        // given
+        const dto = {
+          userId: 1,
+          movieShowingId: 1,
+          bookedSeats: [{ seatId: 1, userId: 1 }],
+        };
+
+        // when
+        const booking = service.create(dto);
+
+        // then
+        expect(Object.keys(db.bookings[booking.id]).sort()).toEqual(
+          ['created_at', 'id', 'movieShowingId', 'userId'].sort(),
+        );
+        expect(db.bookings[booking.id]).not.toHaveProperty('bookedSeats');
+      });
+
     });
     
 

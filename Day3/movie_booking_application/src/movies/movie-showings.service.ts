@@ -17,8 +17,8 @@ export class MovieShowingsService {
     this.moviesService.findOne(createMovieShowingDto.movieId);
     this.theatersService.findOne(createMovieShowingDto.theaterId);
     const movieShowing = {
-      id: this.db.nextMovieShowingId(),
       ...createMovieShowingDto,
+      id: this.db.nextMovieShowingId(),
       created_at: new Date(),
     };
     this.db.movieShowings[movieShowing.id] = movieShowing;
