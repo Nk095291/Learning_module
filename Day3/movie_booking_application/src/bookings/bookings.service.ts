@@ -75,9 +75,6 @@ export class BookingsService {
       const dob = bookedSeat.userId
         ? this.usersService.getDob(bookedSeat.userId)
         : bookedSeat.userDOB;
-      
-        console.log(dob);
-
       if (!dob) {
         throw new BadRequestException('Providing DOB is mandatory for booking');
       }

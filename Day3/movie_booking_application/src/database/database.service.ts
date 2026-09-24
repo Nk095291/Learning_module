@@ -13,13 +13,13 @@ export class Database {
     1: {
       id: 1,
       email: 'john@example.com',
-      dob: new Date('1990-05-12'),
+      dob: '1990-05-12',
       created_at: new Date('2026-01-01'),
     },
     2: {
       id: 2,
       email: 'jane@example.com',
-      dob: new Date('1990-05-12'),
+      dob: '1990-05-12',
       created_at: new Date('2026-01-01'),
     },
   };
