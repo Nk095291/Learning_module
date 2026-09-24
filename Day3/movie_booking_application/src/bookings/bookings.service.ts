@@ -4,11 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateBookingDto } from './dto/create-booking.dto.js';
-import { UpdateBookingDto } from './dto/update-booking.dto.js';
 import { Database } from '../database/database.service.js';
 import { UsersService } from '../users/users.service.js';
 import { MovieShowingsService } from '../movies/movie-showings.service.js';
-import { MoviesService } from '../movies/movies.service.js';
+import { BookedSeatsService } from './booked-seats.service.js';
+import { CreateBookedSeatDto } from './dto/create-booked-seat.dto.js';
 
 @Injectable()
 export class BookingsService {
@@ -16,7 +16,7 @@ export class BookingsService {
     private db: Database,
     private usersService: UsersService,
     private movieShowingsService: MovieShowingsService,
-    private moviesService: MoviesService,
+    private bookedSeatsService: BookedSeatsService,
   ) {}
 
   create(createBookingDto: CreateBookingDto) {
@@ -24,56 +24,71 @@ export class BookingsService {
     const showing = this.movieShowingsService.findOne(
       createBookingDto.movieShowingId,
     );
-    const movie = this.moviesService.findOne(showing.movieId);
+    const seats = createBookingDto.bookedSeats.map((bookedSeat) => bookedSeat.seatId);
 
-    this.assertAgeRating(user.dob, movie.ageRating);
+    if (!this.bookedSeatsService.areSeatsAvailable(seats, showing.id)) {
+      throw new BadRequestException('Selected seats are not available');
+    }
+
+    this.assertAgeRating(createBookingDto.bookedSeats, showing.movie.ageRating);
 
     const booking = {
       id: this.db.nextBookingId(),
       ...createBookingDto,
       created_at: new Date(),
     };
-    this.db.bookings.push(booking);
-    return booking;
+    this.db.bookings[booking.id] = booking;
+
+    for (const bookedSeat of createBookingDto.bookedSeats) {
+      this.bookedSeatsService.create(bookedSeat, booking.id, showing.id);
+    }
+    return {
+      ...booking,
+      bookedSeats: this.bookedSeatsService.findAllByBookingId(booking.id),
+      user : user, 
+      movieShowing : showing,
+    };
   }
 
   findAll() {
-    return this.db.bookings;
+    return Object.values(this.db.bookings).map((booking) => ({
+      ...booking,
+      bookedSeats: this.bookedSeatsService.findAllByBookingId(booking.id),
+      user : this.usersService.findOne(booking.userId),
+      movieShowing : this.movieShowingsService.findOne(booking.movieShowingId),
+    }));
   }
 
   findOne(id: number) {
-    const booking = this.db.bookings.find((b) => b.id === id);
+    const booking = this.db.bookings[id];
     if (!booking) throw new NotFoundException(`Booking ${id} not found`);
-    return booking;
+    return {
+      ...booking,
+      bookedSeats: this.bookedSeatsService.findAllByBookingId(booking.id),
+      user : this.usersService.findOne(booking.userId),
+      movieShowing : this.movieShowingsService.findOne(booking.movieShowingId),
+    };
   }
 
-  update(id: number, updateBookingDto: UpdateBookingDto) {
-    const booking = this.findOne(id);
-    if (updateBookingDto.userId) {
-      this.usersService.findOne(updateBookingDto.userId);
-    }
-    if (updateBookingDto.movieShowingId) {
-      this.movieShowingsService.findOne(updateBookingDto.movieShowingId);
-    }
-    Object.assign(booking, updateBookingDto);
-    return booking;
-  }
+  private assertAgeRating(bookedSeats: CreateBookedSeatDto[], ageRating: number) {
+    for (const bookedSeat of bookedSeats) {
+      const dob = bookedSeat.userId
+        ? this.usersService.getDob(bookedSeat.userId)
+        : bookedSeat.userDOB;
+      
+        console.log(dob);
 
-  remove(id: number) {
-    const index = this.db.bookings.findIndex((b) => b.id === id);
-    if (index === -1) throw new NotFoundException(`Booking ${id} not found`);
-    this.db.bookings.splice(index, 1);
-    return { message: `Booking ${id} deleted successfully` };
-  }
-
-  private assertAgeRating(dob: string, ageRating: number) {
-    const age = Math.floor(
-      (Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000),
-    );
-    if (age < ageRating) {
-      throw new BadRequestException(
-        `User must be at least ${ageRating} to book this movie`,
+      if (!dob) {
+        throw new BadRequestException('Providing DOB is mandatory for booking');
+      }
+      const age = Math.floor(
+        (Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000),
       );
+      if (age < ageRating) {
+        throw new BadRequestException(
+          `User must be at least ${ageRating} to book this movie`,
+        );
+      }
     }
   }
 }

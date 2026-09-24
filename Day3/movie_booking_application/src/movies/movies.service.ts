@@ -13,7 +13,7 @@ export class MoviesService {
       ...createMovieDto,
       created_at: new Date(),
     };
-    this.db.movies.push(movie);
+    this.db.movies[movie.id] = movie;
     return movie;
   }
 
@@ -22,7 +22,7 @@ export class MoviesService {
   }
 
   findOne(id: number) {
-    const movie = this.db.movies.find((m) => m.id === id);
+    const movie = this.db.movies[id];
     if (!movie) throw new NotFoundException(`Movie ${id} not found`);
     return movie;
   }
@@ -30,13 +30,13 @@ export class MoviesService {
   update(id: number, updateMovieDto: UpdateMovieDto) {
     const movie = this.findOne(id);
     Object.assign(movie, updateMovieDto);
+    this.db.movies[id] = movie;
     return movie;
   }
 
   remove(id: number) {
-    const index = this.db.movies.findIndex((m) => m.id === id);
-    if (index === -1) throw new NotFoundException(`Movie ${id} not found`);
-    this.db.movies.splice(index, 1);
-    return { message: `Movie ${id} deleted successfully` };
+    const movie = this.findOne(id);
+    delete this.db.movies[id];
+    return { message: `Movie ${movie.title} (${id}) deleted successfully` };
   }
 }

@@ -1,12 +1,9 @@
-export enum BookedSeatStatus {
-  RESERVED = 'RESERVED',
-  CANCELLED = 'CANCELLED',
-}
-
 export class BookedSeat {
   id: number;
   seatId: number;
-  seatGroupId: number;
-  status: BookedSeatStatus;
+  bookingId: number;
+  userId?: number;
+  userDOB?: string;
+  movieShowingId?: number;
   created_at: Date;
 }

@@ -9,16 +9,16 @@ export class TheatersService {
 
   create(createTheaterDto: CreateTheaterDto) {
     const theater = { id: this.db.nextTheaterId(), ...createTheaterDto };
-    this.db.theaters.push(theater);
+    this.db.theaters[theater.id] = theater;
     return theater;
   }
 
   findAll() {
-    return this.db.theaters;
+    return Object.values(this.db.theaters);
   }
 
   findOne(id: number) {
-    const theater = this.db.theaters.find((t) => t.id === id);
+    const theater = this.db.theaters[id];
     if (!theater) throw new NotFoundException(`Theater ${id} not found`);
     return theater;
   }
@@ -26,13 +26,14 @@ export class TheatersService {
   update(id: number, updateTheaterDto: UpdateTheaterDto) {
     const theater = this.findOne(id);
     Object.assign(theater, updateTheaterDto);
+    this.db.theaters[id] = theater;
     return theater;
   }
 
   remove(id: number) {
-    const index = this.db.theaters.findIndex((t) => t.id === id);
-    if (index === -1) throw new NotFoundException(`Theater ${id} not found`);
-    this.db.theaters.splice(index, 1);
-    return { message: `Theater ${id} deleted successfully` };
+    const theater = this.findOne(id);
+    delete this.db.theaters[id];
+    this.db.removeSeatsByTheaterId(id);
+    return { message: `Theater ${theater.name} (${id}) deleted successfully` };
   }
 }
