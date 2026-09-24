@@ -153,4 +153,8 @@ export class Database {
       (bookedSeat) => bookedSeat.movieShowingId === movieShowingId && bookedSeat.seatId === seatId,
     );
   }
+
+  hasBookingsForSeat(seatId: number): boolean {
+    return Object.values(this.bookedSeats).some((bookedSeat) => bookedSeat.seatId === seatId);
+  }
 }

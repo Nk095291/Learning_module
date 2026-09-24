@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { CreateSeatDto } from './dto/create-seat.dto.js';
 import { UpdateSeatDto } from './dto/update-seat.dto.js';
 import { Database } from '../database/database.service.js';
@@ -44,6 +44,9 @@ export class SeatsService {
 
   remove(id: number) {
     const seat = this.getStoredSeat(id);
+    if (this.db.hasBookingsForSeat(id)) {
+      throw new ConflictException(`Seat ${id} has bookings and cannot be deleted`);
+    }
     delete this.db.seats[id];
     return { message: `Seat ${seat.seatNumber} (${id}) deleted successfully` };
   }
