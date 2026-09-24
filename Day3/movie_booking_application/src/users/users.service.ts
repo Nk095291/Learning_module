@@ -40,7 +40,8 @@ export class UsersService {
     if (isNaN(userId)) throw new BadRequestException('Invalid actor id');
     if (userId != id) throw new ForbiddenException(`User ${userId} cannot delete user ${id}`)
     const user = this.findOne(id);
+    this.db.removeBookingsByUserId(id);
     delete this.db.users[id];
     return { message: `User ${user.email} (${id}) deleted successfully` };
-  } 
+  }
 }

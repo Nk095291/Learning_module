@@ -98,11 +98,46 @@ export class Database {
   }
 
   removeMovieShowingsByMovieId(movieId: number) {
-    Object.values(this.movieShowings).forEach((movieShowing) => {
-      if (movieShowing.movieId === movieId) {
-        delete this.movieShowings[movieShowing.id];
+    this.removeMovieShowingsWhere((movieShowing) => movieShowing.movieId === movieId);
+  }
+
+  removeMovieShowingsByTheaterId(theaterId: number) {
+    this.removeMovieShowingsWhere((movieShowing) => movieShowing.theaterId === theaterId);
+  }
+
+  private removeMovieShowingsWhere(predicate: (movieShowing: MovieShowing) => boolean) {
+    const showingIds = Object.values(this.movieShowings)
+      .filter(predicate)
+      .map((movieShowing) => movieShowing.id);
+    this.removeBookingsByMovieShowingIds(showingIds);
+    showingIds.forEach((id) => delete this.movieShowings[id]);
+  }
+
+  removeBookingsByMovieShowingIds(showingIds: number[]) {
+    const showingIdSet = new Set(showingIds);
+    Object.values(this.bookedSeats).forEach((bookedSeat) => {
+      if (bookedSeat.movieShowingId !== undefined && showingIdSet.has(bookedSeat.movieShowingId)) {
+        delete this.bookedSeats[bookedSeat.id];
       }
     });
+    Object.values(this.bookings).forEach((booking) => {
+      if (showingIdSet.has(booking.movieShowingId)) {
+        delete this.bookings[booking.id];
+      }
+    });
+  }
+
+  removeBookingsByUserId(userId: number) {
+    const bookingIds = Object.values(this.bookings)
+      .filter((booking) => booking.userId === userId)
+      .map((booking) => booking.id);
+    const bookingIdSet = new Set(bookingIds);
+    Object.values(this.bookedSeats).forEach((bookedSeat) => {
+      if (bookingIdSet.has(bookedSeat.bookingId)) {
+        delete this.bookedSeats[bookedSeat.id];
+      }
+    });
+    bookingIds.forEach((id) => delete this.bookings[id]);
   }
 
   getAvailableSeats(movieShowingId: number) {

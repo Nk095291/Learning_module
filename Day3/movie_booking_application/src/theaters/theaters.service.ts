@@ -32,8 +32,9 @@ export class TheatersService {
 
   remove(id: number) {
     const theater = this.findOne(id);
-    delete this.db.theaters[id];
+    this.db.removeMovieShowingsByTheaterId(id);
     this.db.removeSeatsByTheaterId(id);
+    delete this.db.theaters[id];
     return { message: `Theater ${theater.name} (${id}) deleted successfully` };
   }
 }

@@ -36,6 +36,7 @@ export class MoviesService {
 
   remove(id: number) {
     const movie = this.findOne(id);
+    this.db.removeMovieShowingsByMovieId(id);
     delete this.db.movies[id];
     return { message: `Movie ${movie.title} (${id}) deleted successfully` };
   }
